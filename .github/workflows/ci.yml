@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    # This project doesn't take outside contributions. CI runs for the owner's pushes and for
+    # Dependabot only, so a pull request from a fork never executes code on a runner.
+    if: github.event_name == 'push' || github.actor == 'dependabot[bot]'
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      # Pinned to a commit (v4), so a moved tag can't change what runs.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Privacy audit
+        run: ./Scripts/audit-privacy.sh
+      - name: Test
+        run: swift test
+      - name: Build app bundle
+        run: ./Scripts/build-app.sh
+      # Most people have only the Command Line Tools, not full Xcode. Build that way too.
+      - name: Build with the Command Line Tools only
+        env:
+          DEVELOPER_DIR: /Library/Developer/CommandLineTools
+        run: ./Scripts/build-app.sh

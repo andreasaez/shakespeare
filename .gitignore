@@ -1,0 +1,17 @@
+.build/
+.swiftpm/
+dist/
+*.app
+DerivedData/
+xcuserdata/
+.DS_Store
+# Never commit personal stats or exported cards
+stats.json
+stats.corrupt.json
+*.png
+!Docs/*.png
+# Local secrets / signing material
+.env
+*.p12
+*.mobileprovision
+*.cer
