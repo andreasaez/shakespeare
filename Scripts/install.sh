@@ -80,8 +80,8 @@ open "$DEST"
 
 if [ "$FIRST_INSTALL" -eq 0 ] && [ "$ADHOC" -eq 0 ]; then
   echo
-  echo "Updated. Your Input Monitoring permission carries over (signed build)."
-  echo "If the menu still asks for permission, open it and follow the prompt."
+  echo "Updated. A signed build normally keeps its Input Monitoring permission."
+  echo "If the menu asks for it again (for example after changing BUNDLE_ID), allow it once."
   exit 0
 fi
 

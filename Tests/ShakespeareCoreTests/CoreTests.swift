@@ -180,6 +180,27 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(dir[.posixPermissions] as? Int, 0o700)
     }
 
+    func testDeleteAllDataLeavesNoCopyOfTheCountsBehind() throws {
+        let store = StatsPersistence(url: tempURL())
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let e = engine()
+        type(e, 5, on: date(1))
+        try store.save(e.data)
+        try Data("not json".utf8).write(to: store.url)        // a damaged file...
+        _ = store.load()                                      // ...is moved aside, still holding data
+        try store.save(e.data)
+        try Data("leftover".utf8).write(to: store.directory.appendingPathComponent(".stats.json.tmp"))
+        let fm = FileManager.default
+        XCTAssertTrue(fm.fileExists(atPath: store.directory.appendingPathComponent("stats.corrupt.json").path))
+
+        try store.delete()
+
+        for name in ["stats.json", "stats.corrupt.json", ".stats.json.tmp"] {
+            XCTAssertFalse(fm.fileExists(atPath: store.directory.appendingPathComponent(name).path), name)
+        }
+        XCTAssertNoThrow(try store.delete())                  // deleting again is harmless
+    }
+
     func testCorruptFileIsMovedAsideNotOverwritten() throws {
         let store = StatsPersistence(url: tempURL())
         defer { try? FileManager.default.removeItem(at: store.directory) }

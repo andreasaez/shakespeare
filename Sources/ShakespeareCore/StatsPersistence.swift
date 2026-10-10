@@ -17,6 +17,10 @@ public struct StatsPersistence {
 
     public var directory: URL { url.deletingLastPathComponent() }
 
+    /// Where an unreadable stats file is moved aside. It can still hold old counts.
+    var corruptBackupURL: URL { url.deletingPathExtension().appendingPathExtension("corrupt.json") }
+    var tempURL: URL { directory.appendingPathComponent(".stats.json.tmp") }
+
     private enum ReadResult {
         case missing
         case rejected   // not a regular file, a symlink, unreadable or too large
@@ -56,9 +60,8 @@ public struct StatsPersistence {
         case .rejected:
             break
         }
-        let backup = url.deletingPathExtension().appendingPathExtension("corrupt.json")
-        try? FileManager.default.removeItem(at: backup)
-        try? FileManager.default.moveItem(at: url, to: backup)
+        try? FileManager.default.removeItem(at: corruptBackupURL)
+        try? FileManager.default.moveItem(at: url, to: corruptBackupURL)
         return StatsData()
     }
 
@@ -80,7 +83,7 @@ public struct StatsPersistence {
         // Write a private temp file, then atomically rename it over the real one. The temp file
         // is created with O_EXCL | O_NOFOLLOW after removing any leftover, so a planted symlink
         // or stale file can't redirect the write somewhere else.
-        let temp = directory.appendingPathComponent(".stats.json.tmp")
+        let temp = tempURL
         unlink(temp.path)
         let fd = open(temp.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0o600)
         guard fd >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
@@ -102,9 +105,12 @@ public struct StatsPersistence {
         }
     }
 
+    /// Erases every copy of the user's counts: the stats file, a moved-aside corrupt copy and
+    /// any leftover temp file. ("Delete all data" must leave nothing behind.)
     public func delete() throws {
-        if FileManager.default.fileExists(atPath: url.path) {
-            try FileManager.default.removeItem(at: url)
+        for file in [url, corruptBackupURL, tempURL] {
+            // removeItem deletes a symlink itself, never its target. A missing file is fine.
+            do { try FileManager.default.removeItem(at: file) } catch let error as CocoaError where error.code == .fileNoSuchFile {}
         }
     }
 }

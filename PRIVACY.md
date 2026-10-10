@@ -21,7 +21,7 @@ One file: `~/Library/Application Support/Shakespeare/stats.json` (folder `0700`,
 | `hours` | 24 counters, presses per hour |
 | `apps` | app name → count. **Empty unless you opt in.** |
 
-Open the file in any editor and check. To remove everything Shakespeare leaves on your Mac, see **Uninstall** in the README. The menu has **Show data** and **Delete…** buttons, and turning off *Track top apps* erases stored app names immediately.
+Open the file in any editor and check. To remove everything Shakespeare leaves on your Mac, see **Uninstall** in the README. The menu has **Show data** and **Delete…** buttons (Delete removes the stats file and any moved-aside or temporary copy, so no old counts are left behind), and turning off *Track top apps* erases stored app names immediately.
 
 ## What leaves your Mac
 Nothing. There is no networking code, no analytics and no crash reporter, and the app is signed with no network entitlement.
